@@ -21,7 +21,7 @@ class _LoginPageState extends State<LoginPage> {
         );
       // Navigator.pushReplacement(
       //   context, 
-      //   MaterialPageRoute(builder: builder));
+      //   MaterialPageRoute(builder: (context) => const MapPage()));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Nieprawidłowe dane logowania'))
