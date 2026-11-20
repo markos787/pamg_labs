@@ -123,7 +123,7 @@ class _ResultsPageState extends State<ResultsPage> {
                                     context,
                                     MaterialPageRoute(
                                         builder: (context) =>
-                                            RouteDetailsPage(filPath: file.path),
+                                            RouteDetailsPage(filePath: file.path),
                                     ),
                                 );
                             },
@@ -134,3 +134,94 @@ class _ResultsPageState extends State<ResultsPage> {
     }
 }
 
+class RouteDetailsPage extends StatefulWidget {
+    final String filePath;
+    const RouteDetailsPage({super.key, required this.filePath});
+
+    @override
+    State<RouteDetailsPage> createState() => _RouteDetailsPageState();
+  }
+
+  class _RouteDetailsPageState extends State<RouteDetailsPage> {
+    List<LatLng> routePoints = [];
+    double distsance = 0.0;
+    Duration duration = Duration.zero;
+    double averageSpeed = 0.0;
+    bool isLoading = true;
+
+    @override
+    void initState() {
+        super.initState();
+        loadRoute();
+    }
+
+    Future<void> loadRoute() async {
+        try {
+            final file = File(widget.filePath);
+            final content = await file.readAsString();
+            final geoJson = jsonDecode(content);
+
+            final pointsData = geoJson['properties']['points'] as List;
+
+            routePoints = pointsData
+                .map(
+                    (points) => LatLng(
+                        (points['latitude'] as num).toDouble(),
+                        (points['longitude'] as num).toDouble(),
+                    ),
+                ).toList();
+            
+            final distanceCalculator = const Distance();
+            double totalDistance = 0.0;
+
+            for (int i = 1; i < routePoints.length ; i++) {
+                totalDistance += distanceCalculator.as(
+                    LengthUnit.Meter,
+                    routePoints[i-1],
+                    routePoints[i],
+                );
+            }
+
+            final timestamps = pointsData
+                .map((point) => point['timestamp'])
+                .where((timestamp) => timestamp != null)
+                .map((timestamp) => DateTime.parse(timestamp.toString()))
+                .toList();
+            
+            if (timestamps.length >= 2) {
+                final startTime = timestamps.first;
+                final endTime = timestamps.last;
+                duration = endTime.difference(startTime);
+            }
+
+            if (duration.inSeconds > 0) {
+                averageSpeed = (distsance / duration.inSeconds) * 3.6;
+            } else {
+                averageSpeed = 0.0;
+            }
+
+            if (!mounted) return;
+            setState(() {
+              isLoading = false;
+            });
+        } catch (e) {
+            print('Błąd wczytywania strony: $e');
+            if(!mounted) return;
+
+            setState(() {
+              isLoading = false;
+            });
+        }
+    }
+
+    String formatDuration (Duration duration) {
+        final hours = duration.inHours;
+        final minutes = duration.inMinutes.remainder(60);
+        final seconds = duration.inSeconds.remainder(60);
+
+        if (hours > 0) {
+            return '$hours h $minutes min $seconds s';
+        }
+        return '$minutes min $seconds s';
+    }
+  }
