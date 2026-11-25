@@ -35,7 +35,7 @@ class _ResultsPageState extends State<ResultsPage> {
                     file.path.split(Platform.pathSeparator).last.startsWith('trasa_')
             ).toList();
 
-        files.sort.((a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
+        files.sort((a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
         
         if (!mounted) return;
 
@@ -223,5 +223,123 @@ class RouteDetailsPage extends StatefulWidget {
             return '$hours h $minutes min $seconds s';
         }
         return '$minutes min $seconds s';
+    }
+
+    @override
+    Widget build(BuildContext context) {
+
+        if (isLoading) {
+            return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
+
+        if (routePoints.length < 2) {
+            return Scaffold(
+                appBar: AppBar(title: const Text('Wynik nieprawidłowy')),
+                body: Center(child: Text('Brak wystaraczającej ilości danych trasy')),
+            );
+        }
+
+        final center = routePoints.first;
+
+        return Scaffold(
+            appBar: AppBar(
+                title: const Text('Wyniki trasy'),
+                leading: IconButton(
+                    icon: const Icon(Icons.close),
+                    tooltip: 'Zamknij',
+                    onPressed: () {
+                        Navigator.popUntil(context, (route) => route.isFirst);
+                    },
+                ),
+            ),
+
+            body: Column(
+                children: [
+                    Expanded(
+                        child: FlutterMap(
+                            options: MapOptions(initialCenter: center, initialZoom: 15),
+                            children: [
+                                TileLayer(
+                                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                    userAgentPackageName: 'com.example.pamg_labs',
+                                    maxZoom: 19,
+                                ),
+                                PolylineLayer(polylines: [Polyline(points: routePoints, strokeWidth: 5)]),
+                            ],
+                        ),
+                    ),
+
+                    Expanded(
+                        child: Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                    const Text(
+                                        'Statystyki mapy',
+                                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                                    ),
+                                    const SizedBox(height: 35),
+
+                                    Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                        children: [
+                                            _Statistic(
+                                                icon: Icons.route,
+                                                title: 'Odległość',
+                                                value: '${(distsance/1000).toStringAsFixed(2)} km',
+                                            ),
+
+                                            _Statistic(
+                                                icon: Icons.timer,
+                                                title: 'Czas',
+                                                value: formatDuration(duration),
+                                            ),
+
+                                            _Statistic(
+                                                icon: Icons.speed,
+                                                title: 'Średnia prędkość',
+                                                value: '${averageSpeed.toStringAsFixed(2)} km/h',
+                                            ),
+                                        ],
+                                    ),
+                                ],
+                            ),
+                        ),
+                    ),
+                ],
+            ),
+        );
+    }
+  }
+
+  class _Statistic extends StatelessWidget {
+    final IconData icon;
+    final String title;
+    final String value;
+
+    const _Statistic({
+        required this.icon,
+        required this.title,
+        required this.value,
+    });
+
+    @override
+    Widget build(BuildContext context) {
+        return Expanded(
+            child: Column(
+                children: [
+                    Icon(icon, size: 35),
+                    const SizedBox(height: 8),
+                    Text(title, textAlign: TextAlign.center),
+                    const SizedBox(height: 5),
+                    Text(
+                        value,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                ],
+            ),
+        );
     }
   }

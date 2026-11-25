@@ -4,6 +4,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 import 'login.dart';
+import 'results.dart';
 
 import 'dart:async';
 
@@ -374,18 +375,16 @@ class _MapPageState extends State<MapPage> {
               icon: const Icon(Icons.analytics),
               tooltip: 'Wyniki',
               onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Brak zapisanych tras do wyświetlenia lub eksportu',
-                    ),
-                    // Import ResultsPage() - DODAĆ PRZY IMPORTACH!!!
-                    // Navigator.push(
-                    //   context,
-                    //   // Utworzenie strony wyników.
-                    //   MaterialPageRoute(builder: (context) => const ResultsPage()),
-                  ),
-                );
+                // ScaffoldMessenger.of(context).showSnackBar(
+                //   const SnackBar(
+                //     content: Text(
+                //       'Brak zapisanych tras do wyświetlenia lub eksportu',
+                //     ),
+                    Navigator.push(
+                      context,
+                      // Utworzenie strony wyników.
+                      MaterialPageRoute(builder: (context) => const ResultsPage()),
+                  );
               },
             ),
 
